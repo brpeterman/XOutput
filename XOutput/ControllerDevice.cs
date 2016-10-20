@@ -13,40 +13,96 @@ namespace XOutput
 
     public class ControllerDevice
     {
-        public Joystick joystick;
-        int deviceNumber;
-        public string name;
-        public bool enabled = true;
+        #region private fields
+        private OutputState _outputState;
+        #endregion
 
-        public OutputState cOutput;
-        public byte[] mapping = new byte[42];
-        bool[] buttons;
-        int[] dPads;
-        int[] analogs;
+        #region public properties
+        public Joystick Joystick
+        {
+            get;
+            set;
+        }
 
+        public int DeviceNumber
+        {
+            get;
+            set;
+        }
+
+        public string Name
+        {
+            get;
+            set;
+        }
+
+        public bool Enabled
+        {
+            get;
+            set;
+        }
+
+        public OutputState Output
+        {
+            get
+            {
+                return _outputState;
+            }
+            set
+            {
+                _outputState = value;
+            }
+        }
+
+        public byte[] Mapping
+        {
+            get;
+            set;
+        }
+
+        public bool[] Buttons
+        {
+            get;
+            set;
+        }
+
+        public int[] DPads
+        {
+            get;
+            set;
+        }
+
+        public int[] Analogs
+        {
+            get;
+            set;
+        }
+        #endregion
 
         delegate byte input(byte subType, byte num);
 
+        #region constructors
         public ControllerDevice(Joystick joy, int num)
         {
-            joystick = joy;
-            deviceNumber = num;
-            name = joystick.Information.InstanceName;
-            cOutput = new OutputState();
+            Joystick = joy;
+            DeviceNumber = num;
+            Name = Joystick.Information.InstanceName;
+            Output = new OutputState();
             for (int i = 0; i < 42; i++)
             {
-                mapping[i] = 255; //Changed default mapping to blank
+                Mapping[i] = 255; //Changed default mapping to blank
             }
             byte[] saveData = SaveManager.Load(joy.Information.ProductName.ToString());
             if (saveData != null)
-                mapping = saveData;
+                Mapping = saveData;
         }
+        #endregion
 
         #region Utility Functions
 
         public void Save()
         {
-            SaveManager.Save(joystick.Information.ProductName, mapping);
+            SaveManager.Save(Joystick.Information.ProductName, Mapping);
         }
 
         private int[] GetAxes(JoystickState jstate)
@@ -54,15 +110,15 @@ namespace XOutput
             return new int[] { jstate.X, jstate.Y, jstate.Z, jstate.RotationX, jstate.RotationY, jstate.RotationZ };
         }
 
-        private unsafe byte toByte(bool n)
+        private unsafe byte ToByte(bool n)
         {
             return *((byte*)(&n));
         }
 
-        private bool[] getPov(byte n)
+        private bool[] GetPov(byte n)
         {
             bool[] b = new bool[4];
-            int i = dPads[n];
+            int i = DPads[n];
             switch (i)
             {
                 case -1: b[0] = false; b[1] = false; b[2] = false; b[3] = false; break;
@@ -78,9 +134,9 @@ namespace XOutput
             return b;
         }
 
-        public void changeNumber(int n)
+        public void ChangeNumber(int n)
         {
-            deviceNumber = n;
+            DeviceNumber = n;
         }
 
         #endregion
@@ -89,13 +145,13 @@ namespace XOutput
 
         byte Button(byte subType, byte num)
         {
-            int i = (int)toByte(buttons[num]) * 255;
+            int i = ToByte(Buttons[num]) * 255;
             return (byte)i;
         }
 
         byte Analog(byte subType, byte num)
         {
-            int p = analogs[num];
+            int p = Analogs[num];
             switch (subType)
             {
                 case 0: //Normal
@@ -122,19 +178,19 @@ namespace XOutput
 
         byte DPad(byte subType, byte num)
         {
-            int i = (int)toByte(getPov(num)[subType]) * 255;
+            int i = ToByte(GetPov(num)[subType]) * 255;
             return (byte)i;
         }
 
         #endregion
 
-        private void updateInput()
+        private void UpdateInput()
         {
-            joystick.Poll();
-            JoystickState jState = joystick.GetCurrentState();
-            buttons = jState.GetButtons();
-            dPads = jState.GetPointOfViewControllers();
-            analogs = GetAxes(jState);
+            Joystick.Poll();
+            JoystickState jState = Joystick.GetCurrentState();
+            Buttons = jState.GetButtons();
+            DPads = jState.GetPointOfViewControllers();
+            Analogs = GetAxes(jState);
 
             input funcButton = Button;
             input funcAnalog = Analog;
@@ -144,92 +200,92 @@ namespace XOutput
             byte[] output = new byte[21];
             for (int i = 0; i < 21; i++)
             {
-                if (mapping[i * 2] == 255)
+                if (Mapping[i * 2] == 255)
                 {
                     continue;
                 }
-                byte subtype = (byte)(mapping[i * 2] & 0x0F);
-                byte type = (byte)((mapping[i * 2] & 0xF0) >> 4);
-                byte num = mapping[(i * 2) + 1];
+                byte subtype = (byte)(Mapping[i * 2] & 0x0F);
+                byte type = (byte)((Mapping[i * 2] & 0xF0) >> 4);
+                byte num = Mapping[(i * 2) + 1];
                 output[i] = funcArray[type](subtype, num);
             }
 
-            cOutput.A = output[0] != 0;
-            cOutput.B = output[1] != 0;
-            cOutput.X = output[2] != 0;
-            cOutput.Y = output[3] != 0;
+            _outputState.A = output[0] != 0;
+            _outputState.B = output[1] != 0;
+            _outputState.X = output[2] != 0;
+            _outputState.Y = output[3] != 0;
 
-            cOutput.DpadUp = output[4] != 0;
-            cOutput.DpadDown = output[5] != 0;
-            cOutput.DpadLeft = output[6] != 0;
-            cOutput.DpadRight = output[7] != 0;
+            _outputState.DpadUp = output[4] != 0;
+            _outputState.DpadDown = output[5] != 0;
+            _outputState.DpadLeft = output[6] != 0;
+            _outputState.DpadRight = output[7] != 0;
 
-            cOutput.L2 = output[9];
-            cOutput.R2 = output[8];
+            _outputState.L2 = output[9];
+            _outputState.R2 = output[8];
 
-            cOutput.L1 = output[10] != 0;
-            cOutput.R1 = output[11] != 0;
+            _outputState.L1 = output[10] != 0;
+            _outputState.R1 = output[11] != 0;
 
-            cOutput.L3 = output[12] != 0;
-            cOutput.R3 = output[13] != 0;
+            _outputState.L3 = output[12] != 0;
+            _outputState.R3 = output[13] != 0;
 
-            cOutput.Home = output[14] != 0;
-            cOutput.Start = output[15] != 0;
-            cOutput.Back = output[16] != 0;
+            _outputState.Home = output[14] != 0;
+            _outputState.Start = output[15] != 0;
+            _outputState.Back = output[16] != 0;
 
-            cOutput.LY = output[17];
-            cOutput.LX = output[18];
-            cOutput.RY = output[19];
-            cOutput.RX = output[20];
+            _outputState.LY = output[17];
+            _outputState.LX = output[18];
+            _outputState.RY = output[19];
+            _outputState.RX = output[20];
             
         }
 
 
         public byte[] getoutput()
         {
-            updateInput();
-            byte[] Report = new byte[64];
-            Report[1] = 0x02;
-            Report[2] = 0x05;
-            Report[3] = 0x12;
+            UpdateInput();
+            byte[] report = new byte[64];
+            report[1] = 0x02;
+            report[2] = 0x05;
+            report[3] = 0x12;
 
-            Report[10] = (byte)(
-                ((cOutput.Back ? 1 : 0) << 0) |
-                ((cOutput.L3 ? 1 : 0) << 1) |
-                ((cOutput.R3 ? 1 : 0) << 2) |
-                ((cOutput.Start ? 1 : 0) << 3) |
-                ((cOutput.DpadUp ? 1 : 0) << 4) |
-                ((cOutput.DpadRight ? 1 : 0) << 5) |
-                ((cOutput.DpadDown ? 1 : 0) << 6) |
-                ((cOutput.DpadLeft ? 1 : 0) << 7));
+            report[10] = (byte)(
+                ((Output.Back ? 1 : 0) << 0) |
+                ((Output.L3 ? 1 : 0) << 1) |
+                ((Output.R3 ? 1 : 0) << 2) |
+                ((Output.Start ? 1 : 0) << 3) |
+                ((Output.DpadUp ? 1 : 0) << 4) |
+                ((Output.DpadRight ? 1 : 0) << 5) |
+                ((Output.DpadDown ? 1 : 0) << 6) |
+                ((Output.DpadLeft ? 1 : 0) << 7));
 
-            Report[11] = (byte)(
-                ((cOutput.L1 ? 1 : 0) << 2) |
-                ((cOutput.R1 ? 1 : 0) << 3) |
-                ((cOutput.Y ? 1 : 0) << 4) |
-                ((cOutput.B ? 1 : 0) << 5) |
-                ((cOutput.A ? 1 : 0) << 6) |
-                ((cOutput.X ? 1 : 0) << 7));
+            report[11] = (byte)(
+                ((Output.L1 ? 1 : 0) << 2) |
+                ((Output.R1 ? 1 : 0) << 3) |
+                ((Output.Y ? 1 : 0) << 4) |
+                ((Output.B ? 1 : 0) << 5) |
+                ((Output.A ? 1 : 0) << 6) |
+                ((Output.X ? 1 : 0) << 7));
 
             //Guide
-            Report[12] = (byte)(cOutput.Home ? 0xFF : 0x00);
+            report[12] = (byte)(Output.Home ? 0xFF : 0x00);
 
 
-            Report[14] = cOutput.LX; //Left Stick X
+            report[14] = Output.LX; //Left Stick X
 
 
-            Report[15] = cOutput.LY; //Left Stick Y
+            report[15] = Output.LY; //Left Stick Y
 
 
-            Report[16] = cOutput.RX; //Right Stick X
+            report[16] = Output.RX; //Right Stick X
 
 
-            Report[17] = cOutput.RY; //Right Stick Y
+            report[17] = Output.RY; //Right Stick Y
 
-            Report[26] = cOutput.R2;
-            Report[27] = cOutput.L2;
+            report[26] = Output.R2;
+            report[27] = Output.L2;
 
-            return Report;
+            return report;
         }
 
 

@@ -588,7 +588,7 @@
             this.MinimizeBox = false;
             this.Name = "ControllerOptions";
             this.Text = "Controller Options";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.onClose);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClose);
             this.ResumeLayout(false);
             this.PerformLayout();
 

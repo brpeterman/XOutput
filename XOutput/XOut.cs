@@ -10,24 +10,24 @@ namespace XOutput
         public XOut()
         {
             InitializeComponent();
-            this.moveOneDown.Click += (sender, e) => Swap(1, 2);
-            this.moveTwoUp.Click += (sender, e) => Swap(2, 1);
-            this.moveTwoDown.Click += (sender, e) => Swap(2, 3);
-            this.moveThreeUp.Click += (sender, e) => Swap(3, 2);
-            this.moveThreeDown.Click += (sender, e) => Swap(3, 4);
-            this.moveFourUp.Click += (sender, e) => Swap(4, 3);
-            this.enabledOne.CheckedChanged += (sender, e) => enabledChanged(0);
-            this.enabledTwo.CheckedChanged += (sender, e) => enabledChanged(1);
-            this.enabledThree.CheckedChanged += (sender, e) => enabledChanged(2);
-            this.enabledFour.CheckedChanged += (sender, e) => enabledChanged(3);
-            this.optionsOne.Click += (sender, e) => openOptions(0);
-            this.optionsTwo.Click += (sender, e) => openOptions(1);
-            this.optionsThree.Click += (sender, e) => openOptions(2);
-            this.optionsFour.Click += (sender, e) => openOptions(3);
+            moveOneDown.Click += (sender, e) => Swap(1, 2);
+            moveTwoUp.Click += (sender, e) => Swap(2, 1);
+            moveTwoDown.Click += (sender, e) => Swap(2, 3);
+            moveThreeUp.Click += (sender, e) => Swap(3, 2);
+            moveThreeDown.Click += (sender, e) => Swap(3, 4);
+            moveFourUp.Click += (sender, e) => Swap(4, 3);
+            enabledOne.CheckedChanged += (sender, e) => enabledChanged(0);
+            enabledTwo.CheckedChanged += (sender, e) => enabledChanged(1);
+            enabledThree.CheckedChanged += (sender, e) => enabledChanged(2);
+            enabledFour.CheckedChanged += (sender, e) => enabledChanged(3);
+            optionsOne.Click += (sender, e) => openOptions(0);
+            optionsTwo.Click += (sender, e) => openOptions(1);
+            optionsThree.Click += (sender, e) => openOptions(2);
+            optionsFour.Click += (sender, e) => openOptions(3);
 
-            boxes = new System.Windows.Forms.GroupBox[4] { controllerBoxOne, controllerBoxTwo, controllerBoxThree, controllerBoxFour };
-            checks = new System.Windows.Forms.CheckBox[4] { enabledOne, enabledTwo, enabledThree, enabledFour };
-            options = new System.Windows.Forms.Button[4] { optionsOne, optionsTwo, optionsThree, optionsFour };
+            boxes = new GroupBox[4] { controllerBoxOne, controllerBoxTwo, controllerBoxThree, controllerBoxFour };
+            checks = new CheckBox[4] { enabledOne, enabledTwo, enabledThree, enabledFour };
+            options = new Button[4] { optionsOne, optionsTwo, optionsThree, optionsFour };
         }
 
         private void XOut_Load(object sender, EventArgs e)
@@ -97,7 +97,7 @@ namespace XOutput
                 if (dev[i] != null)
                 {
                     boxes[i].Visible = true;
-                    boxes[i].Text = (i + 1).ToString() + ": " + dev[i].name;
+                    boxes[i].Text = (i + 1).ToString() + ": " + dev[i].Name;
                     checks[i].Visible = true;
                 }
                 else
@@ -123,14 +123,14 @@ namespace XOutput
         private void enabledChanged(int i)
         {
             boxes[i].Enabled = checks[i].Checked;
-            controllerManager.setControllerEnable(i, checks[i].Checked);
+            controllerManager.SetControllerEnabled(i, checks[i].Checked);
         }
 
         private void openOptions(int i)
         {
             if (optionsWindow == null)
             {
-                optionsWindow = new ControllerOptions(controllerManager.getController(i));
+                optionsWindow = new ControllerOptions(controllerManager.GetController(i));
                 optionsWindow.Show();
                 optionsWindow.Activate();
                 optionsWindow.FormClosed += (sender, e) => { optionsWindow = null; };
@@ -161,7 +161,7 @@ namespace XOutput
 
         private void isExclusive_CheckedChanged(object sender, EventArgs e)
         {
-            controllerManager.changeExclusive(!controllerManager.isExclusive);
+            controllerManager.ChangeExclusive(!controllerManager.IsExclusive);
         }
 
 
